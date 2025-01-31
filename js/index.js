@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const timerDisplay = document.getElementById('timerDisplay');
     const alertSound = new Audio("audio/done.wav");
     let timerInterval;
+    let isTimerRunning = false;
 
     function getRandomTopics(count) {
         const shuffled = [...topics].sort(() => 0.5 - Math.random());
@@ -37,6 +38,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timerDisplay.textContent = '';
+        timerBtn.textContent = 'Start Timer';
+        timerBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+        timerBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        timerBtn.disabled = false;
+        timerBtn.classList.remove('opacity-50');
+        isTimerRunning = false;
+    }
+
     function startTimer(duration, callback) {
         let timeLeft = duration;
         timerDisplay.textContent = formatTime(timeLeft);
@@ -47,10 +59,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                alertSound.play();
+                playAlertSound();
                 callback?.();
             }
         }, 1000);
+    }
+
+    function playAlertSound() {
+        alertSound.play();
     }
 
     generateBtn.addEventListener('click', () => {
@@ -59,17 +75,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     timerBtn.addEventListener('click', () => {
-        // Clear any existing timer
-        clearInterval(timerInterval);
-        timerBtn.disabled = true;
-        timerBtn.classList.add('opacity-50');
+        if (isTimerRunning) {
+            resetTimer();
+            return;
+        }
+
+        isTimerRunning = true;
+        timerBtn.textContent = 'Cancel Timer';
+        timerBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+        timerBtn.classList.add('bg-red-600', 'hover:bg-red-700');
 
         // Start 15-second timer
         startTimer(15, () => {
             // After 15-second timer, start 1-minute timer
             startTimer(60, () => {
-                timerBtn.disabled = false;
-                timerBtn.classList.remove('opacity-50');
+                resetTimer();
             });
         });
     });
